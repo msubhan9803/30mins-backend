@@ -1,0 +1,63 @@
+---
+schemaVersion: '2.2'
+description: 30mins-api-deployment
+parameters:
+  env:
+    type: String
+    description: environment name
+    default: development
+    allowedValues:
+    - development
+    - production
+    - staging
+  secretId:
+    type: String
+    description: secrets id in secrets manager
+    default: 30mins-stage
+    allowedValues:
+    - 30mins-stage
+    - 30mins-prod
+  commitId:
+    type: String
+    description: commit id of source code base
+  s3Bucket:
+    type: String
+    description: s3 bucket for artifacts
+mainSteps:
+- precondition:
+    StringEquals:
+    - platformType
+    - Linux
+  action: aws:runShellScript
+  name: Deployment
+  inputs:
+    runCommand:
+    - #!/usr/bin/env bash
+    - set -e
+    - echo "30mins-api-deployment"
+    - sudo -u root mkdir -p /var/www/30mins-api
+    - sudo chown -R cicd:cicd /var/www/30mins-api
+    - cd /var/www/30mins-api
+    - sudo -u cicd pm2 ls
+    - sudo -u cicd sh -c "pm2 delete 30mins-api || exit 0"
+    - sudo -u root rm -rf dist package-lock.json package.json *.tar.gz
+    - sudo -u cicd aws s3 cp s3://{{s3Bucket}}/dist-{{commitId}}.tar.gz . 
+    - sudo -u cicd tar zxf dist-{{commitId}}.tar.gz
+    - sudo chmod -Rf 751 /var/www/30mins-api/
+    - sudo chmod -R 755 /var/www/30mins-api/
+    - sudo chown -Rf cicd:cicd /var/www/30mins-api/
+    - sudo apt-get install -y jq
+    - export AWS_DEFAULT_REGION=us-west-2
+    - echo "deploy the updates ..."
+    - #APOLLO_KEY=$(aws secretsmanager get-secret-value --secret-id {{secretId}} --query 'SecretString' |jq -r . |jq -r '.APOLLO_KEY')
+    - #APOLLO_GRAPH_REF=$(aws secretsmanager get-secret-value --secret-id {{secretId}} --query 'SecretString' |jq -r . |jq -r '.APOLLO_GRAPH_REF')
+    - #APOLLO_SCHEMA_REPORTING==$(aws secretsmanager get-secret-value --secret-id {{secretId}} --query 'SecretString' |jq -r . |jq -r '.APOLLO_SCHEMA_REPORTING')
+    - sudo -u cicd npm ci
+    - #sudo -u cicd APOLLO_KEY=$APOLLO_KEY APOLLO_GRAPH_REF=$APOLLO_GRAPH_REF APOLLO_SCHEMA_REPORTING=$APOLLO_SCHEMA_REPORTING NODE_ENV={{env}} pm2 start --name 30mins-backend ./dist/index.js --node-args="--experimental-specifier-resolution=node" --update-env
+    - sudo -u cicd NODE_ENV={{env}} pm2 start --name 30mins-api ./dist/index.js --node-args="--experimental-specifier-resolution=node" --update-env
+    - sleep 15
+    - sudo -u cicd sh -c "pm2 logs 30mins-api --lines=50 --nostream"
+    - sudo -u cicd pm2 save
+    - echo "api health check"
+    - curl -v 127.0.0.1:3000/graphql?query=%7B__typename%7D
+    - rm -rf dist-{{commitId}}.tar.gz

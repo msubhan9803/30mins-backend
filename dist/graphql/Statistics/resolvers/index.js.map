@@ -1,0 +1,1 @@
+{"version":3,"file":"index.js","sourceRoot":"","sources":["../../../../src/graphql/Statistics/resolvers/index.ts"],"names":[],"mappings":"AAAA,OAAO,uBAAuB,MAAM,mCAAmC,CAAC;AAExE,OAAO,0BAA0B,MAAM,wCAAwC,CAAC;AAEhF,MAAM,OAAO,GAAG;IACd,uBAAuB;CACxB,CAAC;AAEF,MAAM,SAAS,GAAG,EAAC,0BAA0B,EAAC,CAAC;AAE/C,MAAM,CAAC,MAAM,SAAS,GAAG,EAAC,OAAO,EAAE,SAAS,EAAC,CAAC"}

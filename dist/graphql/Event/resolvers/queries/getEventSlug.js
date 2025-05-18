@@ -1,0 +1,49 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+import jwt from 'jsonwebtoken';
+import AwsSecrets from '../../../../utils/getAwsSecrets';
+import Event from '../../../../MongoModels/Event';
+export default function getEventSlug(parent, { slug, token }, context, info) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ENV_VALUES = yield AwsSecrets.getInstance();
+        const accessTokenSecret = ENV_VALUES.JWT_ACCESS_TOKEN_SECRET;
+        try {
+            const decodedToken = jwt.verify(token, accessTokenSecret);
+            const slugCheck = yield Event.exists({
+                userId: decodedToken.UserId,
+                serviceSlug: slug,
+            });
+            return {
+                eventSlugCheck: slugCheck,
+                message: 'Slug Checked Successfully',
+                status: 200,
+            };
+        }
+        catch (err) {
+            if (err.name === 'JsonWebTokenError') {
+                return {
+                    message: 'Not Authenticated',
+                    status: 401,
+                };
+            }
+            if ((err === null || err === void 0 ? void 0 : err._message) === 'Service validation failed') {
+                return {
+                    message: err.message,
+                    status: 400,
+                };
+            }
+            return {
+                message: err.message,
+                status: 500,
+            };
+        }
+    });
+}
+//# sourceMappingURL=getEventSlug.js.map

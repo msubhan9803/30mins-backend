@@ -1,0 +1,7 @@
+import { gql } from 'apollo-server-express';
+export const queries = gql `
+  type Query {
+    getStripeAccount: StripeAccountDataResponse
+  }
+`;
+//# sourceMappingURL=queries.js.map

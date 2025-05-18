@@ -1,0 +1,123 @@
+export enum BW_LIST {
+  BLACK_LIST = 'BLACK_LIST',
+  WHITE_LIST = 'WHITE_LIST',
+}
+
+export enum BUSSINESS_STATS {
+  TOTAL_REVENUE = 'totalRevenue',
+  TOTAL_MONTHLY_RECURRING_REVENUE = 'totalMonthlyRecurringRevenue',
+  TOTAL_ANNUALLY_RECURRING_REVENUE = 'totalAnnualRecurringRevenue',
+  TOTAL_ORGANIZATION_REVENUE = 'totalOrganizationRevenue',
+  TOTAL_ORGANIZATION_MONTHLY_RECURRING_REVENUE = 'totalOrganizationMonthlyRecurringRevenue',
+  TOTAL_ORGANIZATION_ANNUALLY_RECURRING_REVENUE = 'totalOragnizationAnnualRecurringRevenue',
+  TOTAL_USERS_SIGNED_UP = 'totalUsersSignedUp',
+  TOTAL_USERS_VERIFIED = 'totalUsersVerified',
+  TOTAL_USERS_WELCOME_COMPLETE = 'totalUsersWelcomeComplete',
+  TOTAL_ORGANIZATIONS_SIGNED_UP = 'totalOrganizationsSignedUp',
+}
+
+export enum ESCROW_PAYMENT_OPTIONS {
+  NONE = 'none',
+  STRIPE = 'stripe',
+  UPI = 'upiId',
+  PAYONEER = 'payoneerId',
+  PAYPAL = 'paypalId',
+}
+
+export enum SERVICE_AUTH_TYPE {
+  NONE = 'NONE',
+  VERIFIED_ONLY = 'VERIFIED_ONLY',
+  PRE_APPROVED = 'PRE_APPROVED',
+}
+
+export enum SERVICE_TYPES {
+  MEETING = 'MEETING',
+  FREELANCING_WORK = 'FREELANCING_WORK',
+  FULL_TIME_JOB = 'FULL_TIME_JOB',
+  PART_TIME_JOB = 'PART_TIME_JOB',
+  ROUND_ROBIN = 'ROUND_ROBIN',
+}
+
+export enum LANGUAGES {
+  ENGLISH = 'ENGLISH',
+  ESPANOL = 'ESPANOL',
+  ITALIAN = 'ITALIAN',
+  PORTUGUESE = 'PORTUGUESE',
+  ROMANIAN = 'ROMANIAN',
+  GERMAN = 'GERMAN',
+}
+
+export enum IS_EXTENSION_ACTIVE {
+  PAID = 'PAID',
+  GIFTED = 'GIFTED',
+}
+
+export enum PAYMENT_TYPES {
+  ESCROW = 'escrow',
+  DIRECT = 'direct',
+  MANUAL = 'manual',
+  NONE = 'none',
+}
+
+export enum PAYMENT_STATUS {
+  PAID = 'PAID',
+}
+
+export enum EscrowReleaseStatus {
+  UNRELEASED = 'UNRELEASED',
+  RELEASED = 'RELEASED',
+  REFUNDED = 'REFUNDED',
+}
+
+export enum IMAGE_TYPE {
+  PUBLICATION = 'PUBLICATION',
+  AVATAR = 'AVATAR',
+  SERVICE = 'SERVICE',
+  ORGANIZATION = 'ORGANIZATION',
+}
+
+export enum SITEMAP_TYPES {
+  PROFILES = 'profiles',
+  ORGANIZATIONS = 'organizations',
+  SERVICES = 'services',
+}
+
+export enum SUBSCRIPTIONS_EVENTS {
+  STARTED_TYPING = 'STARTED_TYPING',
+  CREATE_MESSAGE_EVENT = 'CREATE_MESSAGE_EVENT',
+}
+
+export enum EVENT_STATUS_TYPES {
+  CANCELLED = 'CANCELLED',
+  UPCOMING = 'UPCOMING',
+  CONCLUDED = 'CONCLUDED',
+}
+
+export enum EVENT_RECURRING_TYPES {
+  NOT_RECURRING = 'NOT_RECURRING',
+  WEEKLY = 'WEEKLY',
+  MONTHLY = 'MONTHLY',
+}
+
+export enum ATTENDEE_STATUS_TYPES {
+  REGISTERED = 'REGISTERED',
+  CANCELLED = 'CANCELLED',
+}
+
+export enum PRODUCT_TYPES {
+  Digital = 'Digital',
+  Physical = 'Physical',
+}
+
+export enum PRODUCTQTT_REFUND_TYPES {
+  REFUNDED = 'REFUNDED',
+  REFUND_DENIED = 'REFUND_DENIED',
+  PENDING_ACTION = 'PENDING_ACTION',
+  NONE = 'NONE',
+}
+
+export enum PUBLIC_ORGANIZATION_FEATURES {
+  MEMBERS = 'MEMBERS',
+  SERVICES = 'SERVICES',
+  SIGN_UP = 'SIGN_UP',
+}

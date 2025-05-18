@@ -1,0 +1,216 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+/* eslint-disable no-await-in-loop */
+import dayjs from 'dayjs';
+import jwt from 'jsonwebtoken';
+import { ATTENDEE_STATUS_TYPES, EVENT_RECURRING_TYPES, EVENT_STATUS_TYPES, } from '../../../../constants/enums';
+import Attendee from '../../../../MongoModels/Attendee';
+import Event from '../../../../MongoModels/Event';
+import createApiLog, { ApiLogLevels, ApiLogTypes } from '../../../../utils/createApiLog';
+import AwsSecrets from '../../../../utils/getAwsSecrets';
+export default function getEventBySlug(parent, { slug, token }) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const ENV_VALUES = yield AwsSecrets.getInstance();
+        const accessTokenSecret = ENV_VALUES.JWT_ACCESS_TOKEN_SECRET;
+        let startLogId;
+        try {
+            const decodedToken = jwt.verify(token, accessTokenSecret);
+            startLogId = yield createApiLog({
+                type: ApiLogTypes.QUERY_START,
+                level: ApiLogLevels.INFO,
+                functionName: 'getEventBySlug',
+                functionParams: [
+                    {
+                        paramName: 'slug',
+                        paramValue: slug,
+                        paramType: typeof slug,
+                    },
+                    {
+                        paramName: 'token',
+                        paramValue: 'HIDDEN_TOKEN',
+                        paramType: typeof token,
+                    },
+                    {
+                        paramName: 'userId',
+                        paramValue: decodedToken.UserId,
+                        paramType: typeof decodedToken.UserId,
+                    },
+                ],
+            });
+            const event = yield Event.findOne({
+                serviceSlug: slug,
+                eventStatus: { $ne: EVENT_STATUS_TYPES.CANCELLED },
+            }).populate('userId');
+            if (!event) {
+                yield createApiLog({
+                    type: ApiLogTypes.QUERY_END,
+                    level: ApiLogLevels.ERROR,
+                    functionName: 'getEventBySlug',
+                    functionParams: [
+                        {
+                            paramName: 'slug',
+                            paramValue: slug,
+                            paramType: typeof slug,
+                        },
+                        {
+                            paramName: 'token',
+                            paramValue: 'HIDDEN_TOKEN',
+                            paramType: typeof token,
+                        },
+                        {
+                            paramName: 'userId',
+                            paramValue: decodedToken.UserId,
+                            paramType: typeof decodedToken.UserId,
+                        },
+                    ],
+                    additionalMessage: 'Document Not Found',
+                    startLogId,
+                });
+                return {
+                    response: {
+                        message: 'Document Not Found',
+                        status: 404,
+                    },
+                };
+            }
+            let eventUpcomingDates = [];
+            if (event.serviceRecurring !== EVENT_RECURRING_TYPES.NOT_RECURRING) {
+                const recurrentType = event.serviceRecurring;
+                const interval = recurrentType === EVENT_RECURRING_TYPES.WEEKLY ? 'week' : 'month';
+                let eventDateTime = dayjs(event.serviceDateTime);
+                const todayDateTime = dayjs();
+                let eventPushedCounts = 0;
+                while (eventPushedCounts < 4) {
+                    if (eventDateTime.isSameOrAfter(todayDateTime)) {
+                        eventUpcomingDates.push({
+                            eventDateTime: eventDateTime.utc().format(),
+                            attendeeCount: 0,
+                            isAttending: false,
+                        });
+                        eventPushedCounts += 1;
+                    }
+                    eventDateTime = dayjs(eventDateTime).add(1, interval);
+                }
+                for (let index = 0; index < eventUpcomingDates.length; index++) {
+                    const eventDateObj = eventUpcomingDates[index];
+                    const attendees = yield Attendee.find({
+                        eventId: event._id,
+                        attendingDateTime: eventDateObj.eventDateTime,
+                        attendeeStatus: ATTENDEE_STATUS_TYPES.REGISTERED,
+                    });
+                    const isAttending = attendees.findIndex(elem => elem.attendeeId.toString() === decodedToken.UserId) > -1;
+                    eventUpcomingDates[index].attendeeCount = attendees.length;
+                    eventUpcomingDates[index].isAttending = isAttending;
+                }
+            }
+            else {
+                const eventDateTime = dayjs(event.serviceDateTime);
+                const attendees = yield Attendee.find({
+                    eventId: event._id,
+                    attendeeStatus: ATTENDEE_STATUS_TYPES.REGISTERED,
+                });
+                const isAttending = attendees.findIndex(elem => elem.attendeeId.toString() === decodedToken.UserId) > -1;
+                eventUpcomingDates.push({
+                    eventDateTime: eventDateTime.utc().format(),
+                    attendeeCount: attendees.length,
+                    isAttending,
+                });
+            }
+            yield createApiLog({
+                type: ApiLogTypes.QUERY_END,
+                level: ApiLogLevels.INFO,
+                functionName: 'getEventBySlug',
+                functionParams: [
+                    {
+                        paramName: 'slug',
+                        paramValue: slug,
+                        paramType: typeof slug,
+                    },
+                    {
+                        paramName: 'token',
+                        paramValue: 'HIDDEN_TOKEN',
+                        paramType: typeof token,
+                    },
+                    {
+                        paramName: 'userId',
+                        paramValue: decodedToken.UserId,
+                        paramType: typeof decodedToken.UserId,
+                    },
+                ],
+                additionalMessage: 'Event Query Successful',
+                startLogId,
+            });
+            return {
+                eventData: event,
+                eventUpcomingDates,
+                response: {
+                    message: 'Event Query Successful',
+                    status: 200,
+                },
+            };
+        }
+        catch (err) {
+            if (err.name === 'JsonWebTokenError') {
+                yield createApiLog({
+                    type: ApiLogTypes.QUERY_END,
+                    level: ApiLogLevels.ERROR,
+                    functionName: 'getEventById',
+                    functionParams: [
+                        {
+                            paramName: 'token',
+                            paramValue: 'HIDDEN_TOKEN',
+                            paramType: typeof token,
+                        },
+                    ],
+                    additionalMessage: 'Invalid Permissions: Invalid JWT Token',
+                    startLogId,
+                });
+                return {
+                    response: {
+                        message: 'Not Authenticated',
+                        status: 401,
+                    },
+                };
+            }
+            const decodedToken = jwt.verify(token, accessTokenSecret);
+            yield createApiLog({
+                type: ApiLogTypes.QUERY_END,
+                level: ApiLogLevels.ERROR,
+                functionName: 'getEventBySlug',
+                functionParams: [
+                    {
+                        paramName: 'slug',
+                        paramValue: slug,
+                        paramType: typeof slug,
+                    },
+                    {
+                        paramName: 'token',
+                        paramValue: 'HIDDEN_TOKEN',
+                        paramType: typeof token,
+                    },
+                    {
+                        paramName: 'userId',
+                        paramValue: decodedToken.UserId,
+                        paramType: typeof decodedToken.UserId,
+                    },
+                ],
+                additionalMessage: err.message,
+                startLogId,
+            });
+            return {
+                response: {
+                    message: err.message,
+                    status: 500,
+                },
+            };
+        }
+    });
+}
+//# sourceMappingURL=getEventBySlug.js.map

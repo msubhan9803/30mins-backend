@@ -1,0 +1,7 @@
+import {gql} from 'apollo-server-express';
+
+export const queries = gql`
+  type Query {
+    validateDomain(domain: String!): Response
+  }
+`;
